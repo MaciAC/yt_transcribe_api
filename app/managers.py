@@ -2,19 +2,47 @@ from scrapetube import get_channel
 from pytube import YouTube
 from os import getcwd
 import subprocess
-
+import threading
+import multiprocessing
 
 class ChannelManager:
     def __init__(self, channel_name: str):
         self.channel_name = channel_name
 
-    def get_n_latest_video_ids(self, n: int) -> list[str]:
+    def get_n_latest_video_ids(self, n: int):
         videos = get_channel(channel_username=self.channel_name, limit=int(n))
-        return [v['videoId'] for v in videos]
+        self.video_ids = [video['videoId'] for video in videos]
+
+    def download_videos_batch(self):
+        tasks = []
+        for video_id in self.video_ids:
+            v_manager = VideoManager(video_id)
+            tasks.append(threading.Thread(target=v_manager.download_youtube_audio()))
+            tasks[-1].start()
+            tasks[-1].join()
+
+    def convert_videos_batch(self):
+        tasks = []
+        for video_id in self.video_ids:
+            v_manager = VideoManager(video_id)
+            tasks.append(threading.Thread(target=v_manager.convert_audio()))
+            tasks[-1].start()
+        for task in tasks:
+            task.join()
+
+    def transcribe_videos_batch(self):
+        v_manager = VideoManager()
+        with multiprocessing.Pool(processes=2) as pool:
+            # Run the function in parallel using the pool.map() function
+            results = pool.map(v_manager.transcribe_audiofile, self.video_ids)
+        print(results)
+
 
 class VideoManager:
     DATA_PATH = getcwd() + "/data"
-    def __init__(self, video_id):
+    def __init__(self, video_id=None):
+        if not video_id:
+            return
         self.video_id = video_id
         self.yt_instance = YouTube(f"https://www.youtube.com/watch?v={video_id}")
         self.filename_download = f"{video_id}.mp4"
@@ -40,7 +68,9 @@ class VideoManager:
         p2 = subprocess.Popen([command], shell=True)
         out, err = p2.communicate()
 
-    def transcribe_audiofile(self):
+    def transcribe_audiofile(self, video_id=None):
+        if video_id:
+            self.__init__(video_id)
         lib_path = "/Users/maciaac/Documents/build/whisper.cpp"
         command = f"{lib_path}/main -m {lib_path}/models/ggml-tiny.en.bin "
         command += f" -f '{self.filepath_wav}' -otxt"

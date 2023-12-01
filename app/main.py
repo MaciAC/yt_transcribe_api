@@ -44,14 +44,6 @@ def convert_audio_multiprocess(paths):
     fp.close()
 
 
-def convert_audio(path):
-    command = f"ffmpeg -hide_banner -loglevel error " \
-               "-i '{}' -acodec pcm_s16le -ar 16000 '{}.wav' -n".format(path, path[:-4])
-    p2 = subprocess.Popen([command], shell=True)
-    out, err = p2.communicate()
-
-
-
 
 @app.get("/video/transcribe/")
 def transcribe_video_id(video_id: str):
@@ -65,7 +57,10 @@ def transcribe_video_id(video_id: str):
             "transcription": v_manager.transcription}
 
 @app.get("/channel/transcribe/")
-def transcribe_channel_n_latest_videos(channel_name, n):
+def transcribe_channel_n_latest_videos(channel_name:str, n:int):
     ch_manager = ChannelManager(channel_name)
-    video_ids = ch_manager.get_n_latest_video_ids(n)
+    ch_manager.get_n_latest_video_ids(n)
+    ch_manager.download_videos_batch()
+    ch_manager.convert_videos_batch()
+    ch_manager.transcribe_videos_batch()
 
