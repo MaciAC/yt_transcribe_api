@@ -71,7 +71,7 @@ class VideoManager:
     def transcribe_audiofile(self, video_id=None):
         if video_id:
             self.__init__(video_id)
-        lib_path = "/Users/maciaac/Documents/build/whisper.cpp"
+        lib_path = "/code/whisper"
         command = f"{lib_path}/main -m {lib_path}/models/ggml-tiny.en.bin "
         command += f" -f '{self.filepath_wav}' -otxt"
         p2 = subprocess.Popen([command], shell=True)

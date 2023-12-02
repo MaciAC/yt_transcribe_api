@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-import whisper
 from os import getcwd
 import subprocess
 import tempfile
@@ -8,13 +7,12 @@ from managers import ChannelManager, VideoManager
 
 app = FastAPI()
 
-model = whisper.load_model("tiny")
 
 "time ./main -m models/ggml-tiny.en.bin" \
 "-f ~/Documents/build/YT\ transcribe\ API/data/0lS8U6Rq6EY.wav" \
 "-otxt ~/Documents/build/YT\ transcribe\ API/data/API/data/0lS8U6Rq6EY.txt"
 
-def run_commands_multiprocess(commands: list[str], silent=True):
+def run_commands_multiprocess(commands: list, silent=True):
     commands_str = '\n'.join(commands)
     command = "printf '{}' | xargs -I % -n 1 -P 5 sh -c '{}'".format(
         commands_str.replace("'", r"'\"'\"'"), '' if silent else 'echo %;'
