@@ -11,16 +11,16 @@ local_setup: ## download model, compile whisper and create venv
 	python3 -m venv .venv
 	source .venv/bin/activate && python3 -m pip install -r requirements.txt
 
-local_serve:
+local_serve: ## Serve API in 0.0.0.0:80
 	source .venv/bin/activate && python3 app/main.py
 
 docker_build: ## Build docker image
 	docker build -t app_yt_transcriber .
 
-docker_serve: ## Serve API in 0.0.0.0:80
+docker_serve: ## Run docker that serve API in 0.0.0.0:80
 	docker run -i --rm --name yt_transcribe -p 80:80 -v ./data:/code/data app_yt_transcriber
 
-docker_serve_gpu: ## Serve API in 0.0.0.0:80 in a docker with access to gpu, only works with nvidia-container-toolkit installed in the host
+docker_serve_gpu: ## Run docker that serve API in 0.0.0.0:80 in a docker with access to gpu, only works with nvidia-container-toolkit installed in the host
 	docker run -i --rm --gpus all --name yt_transcribe -p 80:80 -v ./app/data:/code/app/data app_yt_transcriber
 
 clean: ## Clean data dir
