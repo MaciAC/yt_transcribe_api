@@ -1,64 +1,54 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from os import getcwd
-import subprocess
-import tempfile
+import time
 from managers import ChannelManager, VideoManager
+import uvicorn
 
+description = """
+# Youtube video transcriber.
+## You can
+* Transcribe 1 video.
+* Transcribe the N last videos of a youtube channel.
+"""
 
-app = FastAPI()
-
-
-"time ./main -m models/ggml-tiny.en.bin" \
-"-f ~/Documents/build/YT\ transcribe\ API/data/0lS8U6Rq6EY.wav" \
-"-otxt ~/Documents/build/YT\ transcribe\ API/data/API/data/0lS8U6Rq6EY.txt"
-
-def run_commands_multiprocess(commands: list, silent=True):
-    commands_str = '\n'.join(commands)
-    command = "printf '{}' | xargs -I % -n 1 -P 5 sh -c '{}'".format(
-        commands_str.replace("'", r"'\"'\"'"), '' if silent else 'echo %;'
-    )
-    p2 = subprocess.Popen(command, shell=True, executable='/bin/bash')
-    out, err = p2.communicate()
-    print("Completed!")
-
-
-def transcribe_multiple_audiofiles(paths):
-    lib_path = "/Users/maciaac/Documents/build/whisper.cpp"
-    command = f"{lib_path}/main -m {lib_path}/models/ggml-tiny.en.bin"
-    command += "-f {} -otxt {}"
-    comand_list = [command.format(p, p.replace("wav", "txt")) for p in paths]
-    fp = tempfile.NamedTemporaryFile()
-    fp.write(b"\n".join([bytes(c, 'utf-8') for c in comand_list]))
-    fp.close()
-    run_commands_multiprocess(fp)
-
-
-def convert_audio_multiprocess(paths):
-    command = "ffmpeg -hide_banner -loglevel error -i '{}' -acodec pcm_s16le -ar 16000 '{}' -n"
-    comand_list = [command.format(p, p.replace(".mp4", ".wav")) for p in paths]
-    fp = tempfile.NamedTemporaryFile()
-    fp.write(bytes("\n".join([c for c in comand_list]), 'utf-8'))
-    run_commands_multiprocess(fp)
-    fp.close()
-
+app = FastAPI(
+    title="YTranscriber",
+    description=description,
+    version="0.0.1",
+)
 
 
 @app.get("/video/transcribe/")
 def transcribe_video_id(video_id: str):
+    start_time = time.time()
     v_manager = VideoManager(video_id)
-    v_manager.download_youtube_audio()
-    v_manager.convert_audio()
-    v_manager.transcribe_audiofile()
-    return {"video_id": video_id,
-            "title": v_manager.yt_instance.title,
-            "filename": f"{getcwd()}/data/{v_manager.filename_download}",
-            "transcription": v_manager.transcription}
+    if not v_manager.yt_instance:
+        raise HTTPException(status_code=404, detail="Video id not found")
+    if not v_manager.download_youtube_audio():
+        raise HTTPException(status_code=500, detail="Not able to download video")
+    result = v_manager.transcribe_audiofile()
+    if not result:
+        raise HTTPException(status_code=500, detail="Not able to transcribe video")
+    result['elapsed_time'] = time.time() - start_time
+    return result
+
 
 @app.get("/channel/transcribe/")
 def transcribe_channel_n_latest_videos(channel_name:str, n:int):
+    start_time = time.time()
     ch_manager = ChannelManager(channel_name)
-    ch_manager.get_n_latest_video_ids(n)
+    if not ch_manager.get_n_latest_video_ids(n):
+        raise HTTPException(status_code=404, detail="Channel name not found")
     ch_manager.download_videos_batch()
-    ch_manager.convert_videos_batch()
-    ch_manager.transcribe_videos_batch()
+    results_list = ch_manager.transcribe_videos_batch()
+    for i, result in enumerate(results_list):
+        if not result:
+            results_list[i] = {"video_id": ch_manager.video_ids[i],
+                        "error": "There hsa been an error transcribing this video id.",}
+    result = {"elapsed_time" : time.time() - start_time,
+              "results" : results_list}
+    return result
 
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=80, log_level="info")

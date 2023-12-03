@@ -1,17 +1,23 @@
 from scrapetube import get_channel
-from pytube import YouTube
+from pytube import YouTube, exceptions
 from os import getcwd
 import subprocess
 import threading
 import multiprocessing
+from json.decoder import JSONDecodeError
+
 
 class ChannelManager:
     def __init__(self, channel_name: str):
         self.channel_name = channel_name
 
     def get_n_latest_video_ids(self, n: int):
-        videos = get_channel(channel_username=self.channel_name, limit=int(n))
-        self.video_ids = [video['videoId'] for video in videos]
+        try:
+            videos = get_channel(channel_username=self.channel_name, limit=int(n))
+            self.video_ids = [video['videoId'] for video in videos]
+            return True
+        except JSONDecodeError:
+            return False
 
     def download_videos_batch(self):
         tasks = []
@@ -35,7 +41,7 @@ class ChannelManager:
         with multiprocessing.Pool(processes=2) as pool:
             # Run the function in parallel using the pool.map() function
             results = pool.map(v_manager.transcribe_audiofile, self.video_ids)
-        print(results)
+        return results
 
 
 class VideoManager:
@@ -44,21 +50,25 @@ class VideoManager:
         if not video_id:
             return
         self.video_id = video_id
-        self.yt_instance = YouTube(f"https://www.youtube.com/watch?v={video_id}")
         self.filename_download = f"{video_id}.mp4"
         self.filepath_wav = f"{self.DATA_PATH}/{video_id}.wav"
         self.filepath_txt = f"{self.filepath_wav}.txt"
+        try:
+            self.yt_instance = YouTube(f"https://www.youtube.com/watch?v={video_id}")
+        except exceptions.RegexMatchError:
+            self.yt_instance = None
 
 
     def download_youtube_audio(self):
         try:
             audio = self.yt_instance.streams.filter(only_audio=True)[0]
-            print(f"Downloading: {self.yt_instance.title}...")
             audio.download(output_path=self.DATA_PATH,
                         filename=self.filename_download)
-            print("Download complete!")
+            return True
         except Exception as e:
             print(f"Error: {str(e)}")
+            return False
+
 
     def convert_audio(self):
         command = "ffmpeg -hide_banner -loglevel error " \
@@ -71,10 +81,18 @@ class VideoManager:
     def transcribe_audiofile(self, video_id=None):
         if video_id:
             self.__init__(video_id)
-        lib_path = "/code/whisper"
-        command = f"{lib_path}/main -m {lib_path}/models/ggml-tiny.en.bin "
-        command += f" -f '{self.filepath_wav}' -otxt"
+        self.convert_audio()
+        lib_path = getcwd() + "/whisper"
+        command = f"'{lib_path}/main' -m '{lib_path}/ggml-tiny.en.bin' "
+        command += f" -f '{self.filepath_wav}' -otxt "
         p2 = subprocess.Popen([command], shell=True)
         out, err = p2.communicate()
-        with open(self.filepath_txt, "r") as f:
-            self.transcription = f.read()
+        try:
+            with open(self.filepath_txt, "r") as f:
+                self.transcription = f.read()
+                return {"video_id": self.video_id,
+                        "title": self.yt_instance.title,
+                        "transcription": self.transcription,}
+        except Exception as e:
+            print(f"Error transcribing: {e}")
+            return False
