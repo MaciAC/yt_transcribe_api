@@ -61,6 +61,21 @@ Once the API is running you can check the automatically generated documentation 
 http://127.0.0.1/docs#/default/
 
 
+```bash
+(base) ➜  YT transcribe API git:(main) make help
+  help                           Show this help message
+  deps                           download dependencies
+  local_setup                    download model, compile whisper and create venv
+  local_serve                    Serve API in 0.0.0.0:80
+  docker_build                   Build docker image
+  docker_serve                   Run docker that serve API in 0.0.0.0:80
+  docker_serve_gpu               Run docker that serve API in 0.0.0.0:80 in a docker with access to gpu, only works with nvidia-container-toolkit installed in the host
+  clean                          Clean data dir
+
+
+```
+
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
