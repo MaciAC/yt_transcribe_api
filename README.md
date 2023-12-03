@@ -29,7 +29,7 @@ or
 
 Both options will run the server in local host port 80 (http://127.0.0.1:80)
 
-### Run in a M1 mac
+### Run in your machine (unix)
 
 With the repo downloaded go inside it and run:
 ```bash
@@ -71,8 +71,6 @@ http://127.0.0.1/docs#/default/
   docker_serve                   Run docker that serve API in 0.0.0.0:80
   docker_serve_gpu               Run docker that serve API in 0.0.0.0:80 in a docker with access to gpu, only works with nvidia-container-toolkit installed in the host
   clean                          Clean data dir
-
-
 ```
 
 
