@@ -2,7 +2,7 @@ help: ## Show this help message
 	@egrep -h '\s##\s' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m  %-30s\033[0m %s\n", $$1, $$2}'
 
 deps: ## download dependencies
-	git clone https://github.com/ggerganov/whisper.cpp.git -b v1.4.0 --depth 1 whisper
+	git clone https://github.com/ggerganov/whisper.cpp.git --depth 1 whisper
 
 local_setup: ## download model, compile whisper and create venv
 	make deps
