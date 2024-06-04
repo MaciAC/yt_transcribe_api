@@ -6,13 +6,13 @@ deps: ## download dependencies
 
 local_setup: ## download model, compile whisper and create venv
 	make deps
-	cd whisper && bash ./models/download-ggml-model.sh large
+	cd whisper && bash ./models/download-ggml-model.sh base
 	cd whisper && make
 	python3 -m venv .venv
-	source .venv/bin/activate && python3 -m pip install -r requirements.txt
+	. .venv/bin/activate && python3 -m pip install -r requirements.txt
 
 local_serve: ## Serve API in 0.0.0.0:80
-	source .venv/bin/activate && python3 app/main.py
+	. .venv/bin/activate && python3 app/main.py
 
 docker_build: ## Build docker image
 	docker build -t app_yt_transcriber .
