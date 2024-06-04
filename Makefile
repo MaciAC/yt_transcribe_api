@@ -6,7 +6,7 @@ deps: ## download dependencies
 
 local_setup: ## download model, compile whisper and create venv
 	make deps
-	cd whisper && bash ./models/download-ggml-model.sh tiny.en
+	cd whisper && bash ./models/download-ggml-model.sh large
 	cd whisper && make
 	python3 -m venv .venv
 	source .venv/bin/activate && python3 -m pip install -r requirements.txt

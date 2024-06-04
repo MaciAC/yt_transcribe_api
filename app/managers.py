@@ -71,10 +71,11 @@ class VideoManager:
 
 
     def convert_audio(self):
-        command = "ffmpeg -hide_banner -loglevel error " \
+        command = "ffmpeg -hide_banner -loglevel error -y " \
                 f"-i '{self.DATA_PATH}/{self.filename_download}' " \
                 "-acodec pcm_s16le -ar 16000 -ac 1 " \
-                f"'{self.filepath_wav}' -n"
+                f"'{self.filepath_wav}'"
+        print(command)
         p2 = subprocess.Popen([command], shell=True)
         out, err = p2.communicate()
 
@@ -82,8 +83,9 @@ class VideoManager:
         if video_id:
             self.__init__(video_id)
         self.convert_audio()
+        breakpoint()
         lib_path = getcwd() + "/whisper"
-        command = f"'{lib_path}/main' -m '{lib_path}/ggml-tiny.en.bin' "
+        command = f"'{lib_path}/main' -m '{lib_path}/models/ggml-base.bin' -l es "
         command += f" -f '{self.filepath_wav}' -otxt "
         p2 = subprocess.Popen([command], shell=True)
         out, err = p2.communicate()
