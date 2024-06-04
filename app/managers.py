@@ -52,7 +52,7 @@ class VideoManager:
         self.video_id = video_id
         self.filename_download = f"{video_id}.mp4"
         self.filepath_wav = f"{self.DATA_PATH}/{video_id}.wav"
-        self.filepath_txt = f"{self.filepath_wav}.txt"
+        self.filepath_json = f"{self.filepath_wav}.json"
         try:
             self.yt_instance = YouTube(f"https://www.youtube.com/watch?v={video_id}")
         except exceptions.RegexMatchError:
@@ -73,7 +73,7 @@ class VideoManager:
     def convert_audio(self):
         command = "ffmpeg -hide_banner -loglevel error -y " \
                 f"-i '{self.DATA_PATH}/{self.filename_download}' " \
-                "-acodec pcm_s16le -ar 16000 -ac 1 " \
+                "-acodec pcm_s16le -ar 16000 -ac 2 " \
                 f"'{self.filepath_wav}'"
         print(command)
         p2 = subprocess.Popen([command], shell=True)
@@ -89,7 +89,7 @@ class VideoManager:
         p2 = subprocess.Popen([command], shell=True)
         out, err = p2.communicate()
         try:
-            with open(self.filepath_txt, "r") as f:
+            with open(self.filepath_json, "r") as f:
                 self.transcription = f.read()
                 return {"video_id": self.video_id,
                         "title": self.yt_instance.title,
