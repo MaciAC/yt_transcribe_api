@@ -83,7 +83,6 @@ class VideoManager:
         if video_id:
             self.__init__(video_id)
         self.convert_audio()
-        breakpoint()
         lib_path = getcwd() + "/whisper"
         command = f"'{lib_path}/main' -m '{lib_path}/models/ggml-base.bin' -l es -oj -ml 1 -sow -f '{self.filepath_wav}'"
         p2 = subprocess.Popen([command], shell=True)
