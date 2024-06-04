@@ -2,12 +2,12 @@ help: ## Show this help message
 	@egrep -h '\s##\s' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m  %-30s\033[0m %s\n", $$1, $$2}'
 
 deps: ## download dependencies
-	git clone https://github.com/ggerganov/whisper.cpp.git --depth 1 whisper
+	git clone https://github.com/ggerganov/whisper.cpp.git whisper
 
 local_setup: ## download model, compile whisper and create venv
 	make deps
 	cd whisper && bash ./models/download-ggml-model.sh base
-	cd whisper && make
+	cd whisper && WHISPER_CUBLAS=1 make -j
 	python3 -m venv .venv
 	. .venv/bin/activate && python3 -m pip install -r requirements.txt
 
