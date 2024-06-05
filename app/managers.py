@@ -91,6 +91,8 @@ class VideoManager:
         try:
             df = read_csv(self.filepath_csv, delimiter=',', quotechar='"', escapechar='\\')
             word_offsets = [{"s": start, "e": end, "w": word} for start, end, word in zip(df['start'], df['end'], df['text']) if start != end]
+            from pprint import pprint
+            pprint(word_offsets)
             return {
                 "video_id": self.video_id,
                 "title": self.yt_instance.title,
