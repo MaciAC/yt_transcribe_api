@@ -90,13 +90,14 @@ class VideoManager:
         out, err = p2.communicate()
         try:
             df = read_csv(self.filepath_csv, delimiter=',', quotechar='"', escapechar='\\')
-            word_offsets = [{"s": start, "e": end, "w": word} for start, end, word in zip(df['start'], df['end'], df['text']) if start != end and isinstance(word, str)]
+            df.dropna(subset=['text'], inplace=True)
+            word_offsets = [{"s": start, "e": end, "w": word} for start, end, word in zip(df['start'], df['end'], df['text']) if start != end]
             return {
                 "video_id": self.video_id,
                 "title": self.yt_instance.title,
                 "results": {
-                    "words": word_offsets,
                     "transcript": "".join(df['text'].astype(str).tolist()),
+                    "words": word_offsets,
                 }
             }
         except Exception as e:
