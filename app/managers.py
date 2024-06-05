@@ -90,10 +90,15 @@ class VideoManager:
         out, err = p2.communicate()
         try:
             df = read_csv(self.filepath_csv)
-            self.transcription = f.read()
-            return {"video_id": self.video_id,
-                    "title": self.yt_instance.title,
-                    "transcription": self.transcription,}
+            word_offsets = [{"s": start, "e": end, "w": word} for start, end, word in zip(df['start'], df['end'], df['text']) if start != end]
+            return {
+                "video_id": self.video_id,
+                "title": self.yt_instance.title,
+                "results": {
+                    "words": word_offsets,
+                    "transcript": "".join(df['text']),
+                }
+            }
         except Exception as e:
             print(f"Error transcribing: {e}")
             return False
