@@ -5,6 +5,7 @@ import subprocess
 import threading
 import multiprocessing
 from json.decoder import JSONDecodeError
+from pandas import read_csv
 
 
 class ChannelManager:
@@ -52,7 +53,7 @@ class VideoManager:
         self.video_id = video_id
         self.filename_download = f"{video_id}.mp4"
         self.filepath_wav = f"{self.DATA_PATH}/{video_id}.wav"
-        self.filepath_csv = f"{self.filepath_wav}.txt"
+        self.filepath_csv = f"{self.filepath_wav}.csv"
         try:
             self.yt_instance = YouTube(f"https://www.youtube.com/watch?v={video_id}")
         except exceptions.RegexMatchError:
@@ -84,15 +85,15 @@ class VideoManager:
             self.__init__(video_id)
         self.convert_audio()
         lib_path = getcwd() + "/whisper"
-        command = f"'{lib_path}/main' -m '{lib_path}/models/ggml-base.bin' -l es -otxt -ml 1 -sow -f '{self.filepath_wav}'"
+        command = f"'{lib_path}/main' -m '{lib_path}/models/ggml-base.bin' -l es -ocsv -ml 1 -sow -f '{self.filepath_wav}'"
         p2 = subprocess.Popen([command], shell=True)
         out, err = p2.communicate()
         try:
-            with open(self.filepath_csv, "r") as f:
-                self.transcription = f.read()
-                return {"video_id": self.video_id,
-                        "title": self.yt_instance.title,
-                        "transcription": self.transcription,}
+            df = read_csv(self.filepath_csv)
+            self.transcription = f.read()
+            return {"video_id": self.video_id,
+                    "title": self.yt_instance.title,
+                    "transcription": self.transcription,}
         except Exception as e:
             print(f"Error transcribing: {e}")
             return False
