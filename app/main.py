@@ -29,7 +29,7 @@ def transcribe_video_id(video_id: str):
     result = v_manager.transcribe_audiofile()
     if not result:
         raise HTTPException(status_code=500, detail="Not able to transcribe video")
-    result['elapsed_time'] = time.time() - start_time
+    result['elapsed_time'] = int(time.time() - start_time)
     from pprint import pprint
     pprint(result)
     return result
