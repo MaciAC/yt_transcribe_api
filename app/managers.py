@@ -96,7 +96,7 @@ class VideoManager:
                 "title": self.yt_instance.title,
                 "results": {
                     "words": word_offsets,
-                    "transcript": "".join(df['text']),
+                    "transcript": "".join(df['text'].astype(str).tolist()),
                 }
             }
         except Exception as e:
