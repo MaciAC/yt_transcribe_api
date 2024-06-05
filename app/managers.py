@@ -92,8 +92,9 @@ class VideoManager:
             df = read_csv(self.filepath_csv, delimiter=',', quotechar='"', escapechar='\\')
             for word in df['text']:
                 print(word)
+                print(type(word))
 
-            word_offsets = [{"s": start, "e": end, "w": word} for start, end, word in zip(df['start'], df['end'], df['text']) if start != end and word is not None]
+            word_offsets = [{"s": start, "e": end, "w": word} for start, end, word in zip(df['start'], df['end'], df['text']) if start != end and word != "nan"]
             return {
                 "video_id": self.video_id,
                 "title": self.yt_instance.title,
