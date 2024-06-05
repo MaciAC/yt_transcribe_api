@@ -90,7 +90,10 @@ class VideoManager:
         out, err = p2.communicate()
         try:
             df = read_csv(self.filepath_csv, delimiter=',', quotechar='"', escapechar='\\')
-            word_offsets = [{"s": start, "e": end, "w": word} for start, end, word in zip(df['start'], df['end'], df['text']) if start != end]
+            for word in df['text']:
+                print(word)
+
+            word_offsets = [{"s": start, "e": end, "w": word} for start, end, word in zip(df['start'], df['end'], df['text']) if start != end and word is not None]
             return {
                 "video_id": self.video_id,
                 "title": self.yt_instance.title,
