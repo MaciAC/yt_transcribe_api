@@ -85,7 +85,7 @@ class VideoManager:
             self.__init__(video_id)
         self.convert_audio()
         lib_path = getcwd() + "/whisper"
-        command = f"'{lib_path}/main' -m '{lib_path}/models/ggml-base.bin' -l es -ocsv -ml 1 -sow -f '{self.filepath_wav}'"
+        command = f"'{lib_path}/main' -m '{lib_path}/models/ggml-small.bin' -l es -ocsv -ml 1 -sow -f '{self.filepath_wav}'"
         p2 = subprocess.Popen([command], shell=True)
         out, err = p2.communicate()
         try:
