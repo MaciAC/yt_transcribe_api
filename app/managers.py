@@ -91,12 +91,12 @@ class VideoManager:
         try:
             df = read_csv(self.filepath_csv, delimiter=',', quotechar='"', escapechar='\\')
             df.dropna(subset=['text'], inplace=True)
-            word_offsets = [{"s": start, "e": end, "w": word} for start, end, word in zip(df['start'], df['end'], df['text']) if start != end]
+            word_offsets = [{"s": start, "e": end, "w": word.strip()} for start, end, word in zip(df['start'], df['end'], df['text']) if start != end]
             return {
                 "video_id": self.video_id,
                 "title": self.yt_instance.title,
                 "results": {
-                    "transcript": "".join(df['text'].astype(str).tolist()),
+                    "transcript": "".join(df['text'].astype(str).tolist()).strip(),
                     "words": word_offsets,
                 }
             }
